@@ -1,35 +1,36 @@
 var throttle = require('lodash.throttle');
 
-const formEL = document.querySelector('.feedback-form');
-const inputEl = document.querySelector('.feedback-form input');
-const textareaEl = document.querySelector('.feedback-form textarea')
+const form = document.querySelector('.feedback-form');
+
 const LOCALSTORAGE_KEY = 'feedback-form-state';
 
-formEL.addEventListener('input', throttle(evt => {
-    console.log(evt)
-    const objectToSave = { email: email.value, message: message.value };
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(objectToSave));
-  }, 500)
-);
+form.addEventListener('input',throttle(onInputForm,500));
+form.addEventListener('submit', onSubmitForm);
+window.addEventListener('load', updateOutput);
 
-formEL.addEventListener('submit', evt => {
-    evt.preventDefault();
-    console.log({ email: email.value, message: message.value });
-    form.reset();
-    localStorage.removeItem(LOCALSTORAGE_KEY);
-  });
+function onInputForm(evt) {
+  evt.preventDefault();
+  const message = form.elements.message.value;
+  const email = form.elements.email.value;
+  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ message, email }));
   
-  const load = key => {
-    try {
-      const serializedState = localStorage.getItem(key);
-      return serializedState === null ? undefined : JSON.parse(serializedState);
-    } catch (error) {
-      console.error('Get state error: ', error.message);
-    }
-  };
-  
-  const storageData = load(LOCALSTORAGE_KEY);
-  if (storageData) {
-    email.value = storageData.email;
-    message.value = storageData.message;
-  }
+}
+
+function updateOutput(evt) {
+  evt.preventDefault();
+  const outputTextContent = localStorage.getItem(LOCALSTORAGE_KEY);
+  const outputObjectContent = JSON.parse(outputTextContent)||{email:"", message:""};
+  const { email, message } = outputObjectContent;
+  form.elements.email.value = email;
+  form.elements.message.value = message;
+}
+
+function onSubmitForm(evt) {
+  evt.preventDefault();
+  const {
+    elements: { email, message },
+  } = evt.currentTarget;
+  console.log({email:email.value, message:message.value})
+  localStorage.clear();
+  form.reset();
+}
